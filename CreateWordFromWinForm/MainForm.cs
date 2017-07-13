@@ -16,6 +16,8 @@ namespace CreateWordFromWinForm
         public MainForm()
         {
             InitializeComponent();
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
 
             lvFolderList.MouseClick += lvFolderList_OnMouseClick;
             lvFolderList.MouseDoubleClick += lvFolderList_OnMouseDoubleClick;
@@ -30,7 +32,7 @@ namespace CreateWordFromWinForm
             DateTime now = DateTime.Now;
             TimeSpan localOffset = now - now.ToUniversalTime();
 
-            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER;
+            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar;
             DirectoryInfo dinfo = new DirectoryInfo(folderPath);
             FileInfo[] Files = dinfo.GetFiles("*.pdf");
             foreach (FileInfo file in Files)
@@ -46,7 +48,31 @@ namespace CreateWordFromWinForm
 
                 lvFolderList.Items.Add(item);
             }
+            lvFolderList.ListViewItemSorter = new ListViewItemComparer(0);
+            lvFolderList.Sort();
+
         }
+
+        class ListViewItemComparer : IComparer
+        {
+            private int col;
+            public ListViewItemComparer()
+            {
+                col = 0;
+            }
+            public ListViewItemComparer(int column)
+            {
+                col = column;
+            }
+            public int Compare(object x, object y)
+            {
+                int returnVal = -1;
+                //returnVal = String.Compare(((ListViewItem)x).SubItems[col].Text, ((ListViewItem)y).SubItems[col].Text);
+                returnVal = Int32.Parse(((ListViewItem)y).SubItems[col].Text) - Int32.Parse(((ListViewItem)x).SubItems[col].Text);
+                return returnVal;
+            }
+        }
+
 
         private void btnAddNew_Click(object sender, EventArgs e)
         {
@@ -101,15 +127,20 @@ namespace CreateWordFromWinForm
 
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string fileName = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar
-                + lvFolderList.FocusedItem.Text + ".pdf";
-
             DialogResult dialogResult = MessageBox.Show("Are you sure you would like to delete Invoice " + lvFolderList.FocusedItem.Text + "?", "Delete", MessageBoxButtons.YesNo);
+
             if (dialogResult == DialogResult.Yes)
             {
+                string pdfFile = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar
+                + lvFolderList.FocusedItem.Text + ".pdf";
+
+                string docFile = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar
+                + lvFolderList.FocusedItem.Text + ".docx";  
+
                 try
                 {
-                    File.Delete(fileName);
+                    File.Delete(pdfFile);
+                    File.Delete(docFile);
                 }
                 catch (Exception ex)
                 {
@@ -122,7 +153,13 @@ namespace CreateWordFromWinForm
 
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("WorkInProgress");
+            AddEditForm addEditForm = new AddEditForm(lvFolderList.FocusedItem.Text);
+            addEditForm.ShowDialog();
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 }

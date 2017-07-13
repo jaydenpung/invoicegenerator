@@ -10,6 +10,7 @@ using System.IO;
 using Spire.Doc;
 using Spire.Doc.Documents;
 using Spire.Doc.Fields;
+using System.Diagnostics;
 
 namespace CreateWordFromWinForm
 {
@@ -20,10 +21,13 @@ namespace CreateWordFromWinForm
 
         //word document object
         Document document = null;
+        bool isEditMode = false;
 
-        public AddEditForm()
+        public AddEditForm(string invoiceNo = "")
         {
             InitializeComponent();
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
 
             this.ActiveControl = txtNameAddress;
 
@@ -41,6 +45,13 @@ namespace CreateWordFromWinForm
             txtSumInsured.LostFocus += txtSumInsured_OnLostFocus;
 
             dpExiryDate.Value = DateTime.Today.AddYears(1).AddDays(-1);
+
+            if(!string.IsNullOrEmpty(invoiceNo))
+            {
+                isEditMode = true;
+                btnViewPDF.Text = "Update PDF";
+                FillForm(invoiceNo);
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -163,7 +174,21 @@ namespace CreateWordFromWinForm
         {
             try
             {
-                System.Diagnostics.Process.Start(fileName);
+                //TODO: Not working as expected
+                this.Visible = false;
+                Cursor.Current = Cursors.WaitCursor;
+
+                var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = fileName
+                    }
+                };
+                process.Start();
+                process.WaitForExit();
+
+                Cursor.Current = Cursors.Arrow;
                 this.Close();
             }
             catch { }
@@ -238,7 +263,7 @@ namespace CreateWordFromWinForm
             var beforeFloatingPointWord = $"{NumberToWords(beforeFloatingPoint)} Ringgit";
             var afterFloatingPointWord =
                 $"{SmallNumberToWord((int)((doubleNumber - beforeFloatingPoint) * 100), "")} Cents";
-            return $"{beforeFloatingPointWord} and {afterFloatingPointWord} Only";
+            return $"{beforeFloatingPointWord} and {afterFloatingPointWord} Only.";
         }
 
         private static string NumberToWords(int number)
@@ -307,12 +332,120 @@ namespace CreateWordFromWinForm
 
         private void GetNextInvoiceNo()
         {
-            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER;
+            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar;
             DirectoryInfo dinfo = new DirectoryInfo(folderPath);
             FileInfo[] Files = dinfo.GetFiles("*.pdf");
-            int invoiceNo = Int32.Parse(Files.Select(file => file.Name.Split('.')[0]).ToList().Max());
+
+            int invoiceNo = 0;
+
+            if (Files.Any())
+            {
+                invoiceNo = Int32.Parse(Files.Select(file => file.Name.Split('.')[0]).ToList().Max());
+            }
 
             txtInvoiceNo.Text = (invoiceNo + 1).ToString();
+        }
+
+        private void FillForm(string invoiceNo)
+        {
+            //Get document
+            string filePath = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar
+                + invoiceNo + ".docx";
+            document = new Document();
+            document.LoadFromFile(filePath, FileFormat.Docx);
+            
+            //Get textbox values
+            List<string> values = new List<string>();
+            foreach (Section section in document.Sections)
+            {
+                foreach(Paragraph p in section.Paragraphs)
+                {
+                    foreach (DocumentObject obj in p.ChildObjects)
+                    {
+                        if (obj.DocumentObjectType == DocumentObjectType.TextBox)
+                        {
+                            Spire.Doc.Fields.TextBox textbox = obj as Spire.Doc.Fields.TextBox;
+                            string value = "";
+
+                            foreach (DocumentObject objt in textbox.ChildObjects)
+                            {
+
+                                if (objt.DocumentObjectType == DocumentObjectType.Paragraph)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                    {
+                                        value += "\n";
+                                    }
+
+                                    value += (objt as Paragraph).Text;
+                                }
+                            }
+
+                            values.Add(value);
+                        }
+                    }
+                }
+            }
+
+            //Extract key and value
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+
+            foreach (string value in values)
+            {
+                int beginIndex = value.IndexOf('#');
+                int endIndex = value.LastIndexOf('#');
+                
+                //HiddenKey found
+                if(beginIndex != -1 && endIndex != -1)
+                {
+                    endIndex ++;
+                    int length = value.Length - endIndex;
+                    string hiddenKey = value.Substring(beginIndex, endIndex);
+                    string fieldValue = value.Substring(endIndex, length);
+
+                    dictionary.Add(hiddenKey, fieldValue);
+                }
+            }
+
+            //Set Value
+            dpInvoiceDate.Text = dictionary["#HiddenDate#"];
+            txtInvoiceNo.Text = dictionary["#HiddenInvoiceNo#"];
+            txtCoverNoteNo.Text = dictionary["#HiddenCoverNoteNo#"];
+            txtPolicyNo.Text = dictionary["#HiddenPolicyNo#"];
+            txtEndorsementNo.Text = dictionary["#HiddenEndorsementNo#"];
+            if (!String.IsNullOrWhiteSpace(dictionary["#HiddenSumInsured#"]))
+            {
+                txtSumInsured.Text = dictionary["#HiddenSumInsured#"].Remove(0, 3); //Remove "RM "
+            }
+            dpEffectiveDate.Text = dictionary["#HiddenEffDate#"];
+            dpExiryDate.Text = dictionary["#HiddenExpDate#"];
+            txtInsuranceClass.Text = dictionary["#HiddenInsuranceClass#"];
+            txtNameAddress.Text = dictionary["#HiddenNameAddress#"];
+            string agent = dictionary["#HiddenAgent#"];
+
+            if (agent == "Kurnia")
+            {
+                radioAgentA.Checked = true;
+            }
+            else if (agent == "Pacific")
+            {
+                radioAgentB.Checked = true;
+            }
+
+            dgvItems.Rows.Clear();
+
+            for (int i = 0; i < Config.MAX_ROW; i++)
+            {
+                string description = dictionary["#HiddenDescription" + (i + 1) + "#"];
+                string amount = dictionary["#HiddenAmount" + (i + 1) + "#"];
+
+                if(!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(amount))
+                {
+                    amount = amount.Substring(3, amount.Length - 3); //Remove "RM "
+
+                    dgvItems.Rows.Insert(i, description, amount);
+                }
+            }
         }
     }
 }
