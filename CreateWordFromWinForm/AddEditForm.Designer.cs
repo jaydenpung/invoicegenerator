@@ -116,7 +116,7 @@ namespace CreateWordFromWinForm
             this.txtNameAddress.AcceptsTab = true;
             this.txtNameAddress.Font = new System.Drawing.Font("Courier New", 10.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtNameAddress.Location = new System.Drawing.Point(15, 78);
-            this.txtNameAddress.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.txtNameAddress.Margin = new System.Windows.Forms.Padding(2);
             this.txtNameAddress.Name = "txtNameAddress";
             this.txtNameAddress.Size = new System.Drawing.Size(303, 140);
             this.txtNameAddress.TabIndex = 2;
@@ -385,7 +385,9 @@ namespace CreateWordFromWinForm
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(897, 370);
             this.Controls.Add(this.groupBox1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
             this.Name = "AddEditForm";
             this.Text = "Jes Services";
             this.Load += new System.EventHandler(this.Form1_Load);

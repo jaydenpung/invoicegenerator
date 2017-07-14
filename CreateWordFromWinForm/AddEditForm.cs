@@ -19,15 +19,14 @@ namespace CreateWordFromWinForm
         //sample file path
         string samplePath = Application.StartupPath + Path.DirectorySeparatorChar + "Template.docx";
 
+        bool isEditMode = false;
+
         //word document object
         Document document = null;
-        bool isEditMode = false;
 
         public AddEditForm(string invoiceNo = "")
         {
             InitializeComponent();
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
 
             this.ActiveControl = txtNameAddress;
 
@@ -216,6 +215,8 @@ namespace CreateWordFromWinForm
             replaceDict.Add("#ExpDate#", dpExiryDate.Text);            
             replaceDict.Add("#InsuranceClass#", txtInsuranceClass.Text);
             replaceDict.Add("#NameAddress#", txtNameAddress.Rtf);
+            replaceDict.Add("#BankAccountNo#", Config.BANK_ACCOUNT_NO);
+            replaceDict.Add("#BankName#", Config.BANK_NAME);
 
             if (this.radioAgentA.Checked)
             {

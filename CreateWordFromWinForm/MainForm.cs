@@ -16,8 +16,7 @@ namespace CreateWordFromWinForm
         public MainForm()
         {
             InitializeComponent();
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
+            ReadSettingFile();
 
             lvFolderList.MouseClick += lvFolderList_OnMouseClick;
             lvFolderList.MouseDoubleClick += lvFolderList_OnMouseDoubleClick;
@@ -160,6 +159,70 @@ namespace CreateWordFromWinForm
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SettingForm settingForm = new SettingForm();
+            settingForm.FormClosed += SettingForm_OnFormClosed;
+            settingForm.ShowDialog();
+        }
+
+        private void SettingForm_OnFormClosed(object sender, EventArgs e)
+        {
+            if (((SettingForm)sender).save)
+            {
+                ReadSettingFile();
+            }
+        }        
+
+        private void ReadSettingFile()
+        {
+            string line;
+
+            // Read the file and display it line by line.
+            string settingFilePath = Application.StartupPath + Path.DirectorySeparatorChar + "Settings.ini";
+
+            if (!File.Exists(settingFilePath))
+            {
+                CreateDefaultSettingFile(settingFilePath);
+            }
+
+            StreamReader file = new StreamReader(settingFilePath);
+
+            while ((line = file.ReadLine()) != null)
+            {
+                var key = line.Split('=')[0];
+                var value = line.Split('=')[1];
+
+                if (key == "GST")
+                {
+                    double gstDouble = Double.Parse(value);
+                    string gstDescription = (gstDouble * 100) + "%";
+                    Config.GST = new Gst(gstDescription, gstDouble);
+                }
+                else if (key == "BANK_NAME")
+                {
+                    Config.BANK_NAME = value;
+                }
+                else if (key == "BANK_ACCOUNT_NO")
+                {
+                    Config.BANK_ACCOUNT_NO = value;
+                }
+            }
+
+            file.Close();
+        }
+
+        private void CreateDefaultSettingFile(string settingFilePath)
+        {
+            StreamWriter file = new StreamWriter(settingFilePath);
+
+            file.WriteLine("GST=0.06");
+            file.WriteLine("BANK_NAME=Maybank");
+            file.WriteLine("BANK_ACCOUNT_NO=5144 0430 4301");
+
+            file.Close();
         }
     }
 }

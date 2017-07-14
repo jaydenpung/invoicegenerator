@@ -20,11 +20,11 @@ DisableDirPage=no
 
 [Files]
 Source: "CreateWordFromWinForm.exe"; DestDir: "{app}"; DestName: {#MyAppExeName}
-Source: "*"; Excludes: "app.publish, *.iss, JesServicesSetup.exe, CreateWordFromWinForm.exe, CreateWordFromWinForm.Application, CreateWordFromWinForm.exe.config,CreateWordFromWinForm.exe.manifest,CreateWordFromWinForm.pdb, CreateWordFromWinForm.vshost.application,CreateWordFromWinForm.vshost.exe, CreateWordFromWinForm.vshost.exe.config, CreateWordFromWinForm.vshost.config,CreateWordFromWinForm.vshost.exe.manifest"; DestDir: "{app}"
+Source: "*"; Excludes: "Settings.ini, app.publish, *.iss, JesServicesSetup.exe, CreateWordFromWinForm.exe, CreateWordFromWinForm.Application, CreateWordFromWinForm.exe.config,CreateWordFromWinForm.exe.manifest,CreateWordFromWinForm.pdb, CreateWordFromWinForm.vshost.application,CreateWordFromWinForm.vshost.exe, CreateWordFromWinForm.vshost.exe.config, CreateWordFromWinForm.vshost.config,CreateWordFromWinForm.vshost.exe.manifest"; DestDir: "{app}"
 
 [Icons]
-Name: "{group}\JesServicesInvoice"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\JesServices.ico"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\JesServices.ico"
+Name: "{group}\JesServicesInvoice"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\icon.ico"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
@@ -40,16 +40,5 @@ Name: "{app}\DocFolder"
 Filename: {app}\{#MyAppExeName}; Description: Launch Now; Flags: postinstall skipifsilent nowait runascurrentuser
 
 [InstallDelete]
-Type: files; Name: "{app}\CreateWordFromWinForm.exe.config"
-Type: files; Name: "{app}\CreateWordFromWinForm.exe.manifest"
-Type: files; Name: "{app}\CreateWordFromWinForm.pdb"
-Type: files; Name: "{app}\CreateWordFromWinForm.vshost.exe.config"
-Type: files; Name: "{app}\CreateWordFromWinForm.vshost.config"
-Type: files; Name: "{app}\CreateWordFromWinForm.vshost.application"
-Type: files; Name: "{app}\CreateWordFromWinForm.vshost.exe.manifest"
-Type: files; Name: "{app}\CreateWordFromWinForm.exe.config"
-Type: files; Name: "{app}\CreateWordFromWinForm.vshost.exe"
-Type: files; Name: "{app}\JesServicesSetup.exe"
-Type: files; Name: "{app}\CreateWordFromWinForm.exe"
-Type: files; Name: "{app}\CreateWordFromWinForm.application"
-Type: files; Name: "{app}\JesServices.ico"
+Type: filesandordirs; Name: "{app}\app.publish"
+Type: files; Name: "{app}\*"

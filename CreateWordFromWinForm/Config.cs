@@ -7,7 +7,10 @@ namespace CreateWordFromWinForm
 {
     public class Config
     {
-        public static Gst GST = new Gst("6%", 0.06);
+        public static Gst GST;
+        public static string BANK_NAME;
+        public static string BANK_ACCOUNT_NO;
+
         public static int MAX_ROW = 5;
         public static string INVOICE_FOLDER = "InvoiceFolder";
         public static string DOC_FOLDER = "DocFolder";
