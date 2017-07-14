@@ -16,6 +16,7 @@ namespace CreateWordFromWinForm
         public MainForm()
         {
             InitializeComponent();
+            CreateDefaultFolders();
             ReadSettingFile();
 
             lvFolderList.MouseClick += lvFolderList_OnMouseClick;
@@ -223,6 +224,12 @@ namespace CreateWordFromWinForm
             file.WriteLine("BANK_ACCOUNT_NO=5144 0430 4301");
 
             file.Close();
+        }
+
+        private void CreateDefaultFolders()
+        {
+            Directory.CreateDirectory(Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER);
+            Directory.CreateDirectory(Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER);
         }
     }
 }
