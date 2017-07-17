@@ -28,14 +28,14 @@ namespace CreateWordFromWinForm
         {
             InitializeComponent();
 
-            this.ActiveControl = txtNameAddress;
+            this.ActiveControl = txtName;
 
             GetNextInvoiceNo();
 
             dgvItems.CellEndEdit += dgvItems_OnCellEndEdit;
             dgvItems.UserDeletedRow += dgvItems_RowCountChanged;
             dgvItems.UserAddedRow += dgvItems_RowCountChanged;
-            dgvItems.DefaultCellStyle.Font = new System.Drawing.Font("Calibri", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dgvItems.DefaultCellStyle.Font = new System.Drawing.Font("Calibri", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             dgvItems.RowCount = 3;
             dgvItems.Rows[0].Cells[0].Value = "PREMIUM";
             dgvItems.Rows[1].Cells[0].Value = Config.GST.description + " GST";
@@ -77,7 +77,7 @@ namespace CreateWordFromWinForm
             {
                 string hiddenKey = "#Hidden" + kvp.Key.Trim('#') + "#";
 
-                if (kvp.Key == "#NameAddress#")
+                if (kvp.Key == "#Address#")
                 {
                     Section section = document.Sections[0];
                     TextSelection selection = document.FindString(kvp.Key, true, true);
@@ -214,7 +214,14 @@ namespace CreateWordFromWinForm
             replaceDict.Add("#EffDate#", dpEffectiveDate.Text);
             replaceDict.Add("#ExpDate#", dpExiryDate.Text);            
             replaceDict.Add("#InsuranceClass#", txtInsuranceClass.Text);
-            replaceDict.Add("#NameAddress#", txtNameAddress.Rtf);
+            replaceDict.Add("#Name#", txtName.Text);
+
+            //Rich Text Format special handling
+            var oriFont = txtAddress.Font;
+            txtAddress.Font = new Font("Courier New", 10, FontStyle.Regular);
+            replaceDict.Add("#Address#", txtAddress.Rtf);
+            txtAddress.Font = oriFont;
+
             replaceDict.Add("#BankAccountNo#", Config.BANK_ACCOUNT_NO);
             replaceDict.Add("#BankName#", Config.BANK_NAME);
 
@@ -341,7 +348,7 @@ namespace CreateWordFromWinForm
 
             if (Files.Any())
             {
-                invoiceNo = Int32.Parse(Files.Select(file => file.Name.Split('.')[0]).ToList().Max());
+                invoiceNo = Files.Select(file => int.Parse(file.Name.Split('.')[0])).ToList().Max();
             }
 
             txtInvoiceNo.Text = (invoiceNo + 1).ToString();
@@ -421,7 +428,8 @@ namespace CreateWordFromWinForm
             dpEffectiveDate.Text = dictionary["#HiddenEffDate#"];
             dpExiryDate.Text = dictionary["#HiddenExpDate#"];
             txtInsuranceClass.Text = dictionary["#HiddenInsuranceClass#"];
-            txtNameAddress.Text = dictionary["#HiddenNameAddress#"];
+            txtName.Text = dictionary["#HiddenName#"];
+            txtAddress.Text = dictionary["#HiddenAddress#"];
             string agent = dictionary["#HiddenAgent#"];
 
             if (agent == "Kurnia")
