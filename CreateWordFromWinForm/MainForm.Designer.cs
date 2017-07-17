@@ -50,11 +50,11 @@
             // 
             // btnAddNew
             // 
-            this.btnAddNew.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAddNew.Location = new System.Drawing.Point(11, 377);
+            this.btnAddNew.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAddNew.Location = new System.Drawing.Point(11, 455);
             this.btnAddNew.Margin = new System.Windows.Forms.Padding(2);
             this.btnAddNew.Name = "btnAddNew";
-            this.btnAddNew.Size = new System.Drawing.Size(365, 43);
+            this.btnAddNew.Size = new System.Drawing.Size(698, 43);
             this.btnAddNew.TabIndex = 1;
             this.btnAddNew.Text = "Add New";
             this.btnAddNew.UseVisualStyleBackColor = true;
@@ -66,12 +66,12 @@
             this.InvoiceNo,
             this.FileName,
             this.DateCreated});
-            this.lvFolderList.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lvFolderList.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lvFolderList.FullRowSelect = true;
-            this.lvFolderList.Location = new System.Drawing.Point(11, 29);
+            this.lvFolderList.Location = new System.Drawing.Point(11, 39);
             this.lvFolderList.Margin = new System.Windows.Forms.Padding(2);
             this.lvFolderList.Name = "lvFolderList";
-            this.lvFolderList.Size = new System.Drawing.Size(365, 344);
+            this.lvFolderList.Size = new System.Drawing.Size(698, 412);
             this.lvFolderList.Sorting = System.Windows.Forms.SortOrder.Descending;
             this.lvFolderList.TabIndex = 2;
             this.lvFolderList.UseCompatibleStateImageBehavior = false;
@@ -80,58 +80,60 @@
             // InvoiceNo
             // 
             this.InvoiceNo.Text = "Invoice No";
-            this.InvoiceNo.Width = 80;
+            this.InvoiceNo.Width = 140;
             // 
             // FileName
             // 
             this.FileName.Text = "File Name";
-            this.FileName.Width = 140;
+            this.FileName.Width = 180;
             // 
             // DateCreated
             // 
             this.DateCreated.Text = "Date Created";
-            this.DateCreated.Width = 140;
+            this.DateCreated.Width = 280;
             // 
             // cmsListViewRightClick
             // 
+            this.cmsListViewRightClick.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cmsListViewRightClick.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.cmsListViewRightClick.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
             this.editToolStripMenuItem,
             this.deleteToolStripMenuItem});
             this.cmsListViewRightClick.Name = "cmsListViewRightClick";
-            this.cmsListViewRightClick.Size = new System.Drawing.Size(130, 70);
+            this.cmsListViewRightClick.Size = new System.Drawing.Size(174, 94);
             // 
             // openToolStripMenuItem
             // 
-            this.openToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.openToolStripMenuItem.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(173, 30);
             this.openToolStripMenuItem.Text = "Open PDF";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
             // editToolStripMenuItem
             // 
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
-            this.editToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.editToolStripMenuItem.Size = new System.Drawing.Size(173, 30);
             this.editToolStripMenuItem.Text = "Edit";
             this.editToolStripMenuItem.Click += new System.EventHandler(this.editToolStripMenuItem_Click);
             // 
             // deleteToolStripMenuItem
             // 
             this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
-            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(173, 30);
             this.deleteToolStripMenuItem.Text = "Delete";
             this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
             // 
             // menuStrip1
             // 
+            this.menuStrip1.Font = new System.Drawing.Font("Segoe UI", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.optionsToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(387, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(720, 37);
             this.menuStrip1.TabIndex = 3;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -139,14 +141,15 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exitToolStripMenuItem});
+            this.fileToolStripMenuItem.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(66, 33);
             this.fileToolStripMenuItem.Text = "File";
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(125, 34);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -154,14 +157,15 @@
             // 
             this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.settingsToolStripMenuItem});
+            this.optionsToolStripMenuItem.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(109, 33);
             this.optionsToolStripMenuItem.Text = "Options";
             // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(173, 34);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
@@ -169,7 +173,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(387, 424);
+            this.ClientSize = new System.Drawing.Size(720, 504);
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.lvFolderList);
             this.Controls.Add(this.btnAddNew);

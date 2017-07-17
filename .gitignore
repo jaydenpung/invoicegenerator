@@ -51,3 +51,9 @@ CreateWordFromWinForm/bin/Debug/InvoiceFolder/
 CreateWordFromWinForm/bin/Release/DocFolder/
 CreateWordFromWinForm/bin/Release/InvoiceFolder/
 CreateWordFromWinForm/bin/Release/Settings.ini
+CreateWordFromWinForm/bin/Debug/CreateWordFromWinForm.vshost.exe.config
+CreateWordFromWinForm/bin/Debug/CreateWordFromWinForm.vshost.exe
+CreateWordFromWinForm/obj/x86/Release/CreateWordFromWinForm.csprojResolveAssemblyReference.cache
+CreateWordFromWinForm/bin/Release/JesServicesSetup.exe
+CreateWordFromWinForm/bin/Debug/CreateWordFromWinForm.vshost.application
+CreateWordFromWinForm/bin/Debug/CreateWordFromWinForm.vshost.exe.manifest
