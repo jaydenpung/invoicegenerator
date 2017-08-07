@@ -57,3 +57,5 @@ CreateWordFromWinForm/obj/x86/Release/CreateWordFromWinForm.csprojResolveAssembl
 CreateWordFromWinForm/bin/Release/JesServicesSetup.exe
 CreateWordFromWinForm/bin/Debug/CreateWordFromWinForm.vshost.application
 CreateWordFromWinForm/bin/Debug/CreateWordFromWinForm.vshost.exe.manifest
+CreateWordFromWinForm/bin/Release/CreateWordFromWinForm.vshost.exe
+CreateWordFromWinForm/bin/Release/CreateWordFromWinForm.vshost.exe.config

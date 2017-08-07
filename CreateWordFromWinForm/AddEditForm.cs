@@ -201,15 +201,7 @@ namespace CreateWordFromWinForm
             replaceDict.Add("#CoverNoteNo#", txtCoverNoteNo.Text);
             replaceDict.Add("#PolicyNo#", txtPolicyNo.Text.Trim());
             replaceDict.Add("#EndorsementNo#", txtEndorsementNo.Text);
-
-            if (!String.IsNullOrWhiteSpace(txtSumInsured.Text))
-            {
-                replaceDict.Add("#SumInsured#", "RM " + txtSumInsured.Text);
-            }
-            else
-            {
-                replaceDict.Add("#SumInsured#", txtSumInsured.Text);
-            }
+            replaceDict.Add("#SumInsured#", txtSumInsured.Text);
 
             replaceDict.Add("#EffDate#", dpEffectiveDate.Text);
             replaceDict.Add("#ExpDate#", dpExiryDate.Text);            
@@ -267,10 +259,12 @@ namespace CreateWordFromWinForm
 
         public static string NumberToWords(double doubleNumber)
         {
-            var beforeFloatingPoint = (int)Math.Floor(doubleNumber);
-            var beforeFloatingPointWord = $"{NumberToWords(beforeFloatingPoint)} Ringgit";
+            int intBefore = (int)Math.Floor(doubleNumber);
+            int intAfter = (int)(Math.Round((doubleNumber - intBefore), 2) * 100);
+
+            var beforeFloatingPointWord = $"{NumberToWords(intBefore)} Ringgit";
             var afterFloatingPointWord =
-                $"{SmallNumberToWord((int)((doubleNumber - beforeFloatingPoint) * 100), "")} Cents";
+                $"{SmallNumberToWord(intAfter, "")} Cents";
             return $"{beforeFloatingPointWord} and {afterFloatingPointWord} Only.";
         }
 
@@ -316,8 +310,8 @@ namespace CreateWordFromWinForm
         private static string SmallNumberToWord(int number, string words)
         {
             if (number <= 0) return "Zero";
-            if (words != "")
-                words += " ";
+            //if (words != "")
+            //    words += " ";
 
             var unitsMap = new[] { "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
             var tensMap = new[] { "Zero", "Ten", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
@@ -328,7 +322,7 @@ namespace CreateWordFromWinForm
             {
                 words += tensMap[number / 10];
                 if ((number % 10) > 0)
-                    words += "-" + unitsMap[number % 10];
+                    words += " " + unitsMap[number % 10];
             }
             return words;
         }
@@ -421,10 +415,7 @@ namespace CreateWordFromWinForm
             txtCoverNoteNo.Text = dictionary["#HiddenCoverNoteNo#"];
             txtPolicyNo.Text = dictionary["#HiddenPolicyNo#"];
             txtEndorsementNo.Text = dictionary["#HiddenEndorsementNo#"];
-            if (!String.IsNullOrWhiteSpace(dictionary["#HiddenSumInsured#"]))
-            {
-                txtSumInsured.Text = dictionary["#HiddenSumInsured#"].Remove(0, 3); //Remove "RM "
-            }
+            txtSumInsured.Text = dictionary["#HiddenSumInsured#"];
             dpEffectiveDate.Text = dictionary["#HiddenEffDate#"];
             dpExiryDate.Text = dictionary["#HiddenExpDate#"];
             txtInsuranceClass.Text = dictionary["#HiddenInsuranceClass#"];
