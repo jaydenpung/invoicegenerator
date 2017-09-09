@@ -14,6 +14,8 @@ namespace CreateWordFromWinForm
         public static int MAX_ROW = 5;
         public static string INVOICE_FOLDER = "InvoiceFolder";
         public static string DOC_FOLDER = "DocFolder";
+
+        public static List<string> MONTHS = new List<string> { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
     }
 
     public class Gst
@@ -24,6 +26,18 @@ namespace CreateWordFromWinForm
         public Gst(string description, double value)
         {
             this.description = description;
+            this.value = value;
+        }
+    }
+
+    public class ListFilter
+    {
+        public string key;
+        public Object value;
+
+        public ListFilter(string key, Object value)
+        {
+            this.key = key;
             this.value = value;
         }
     }

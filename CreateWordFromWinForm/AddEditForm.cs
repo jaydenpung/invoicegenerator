@@ -329,7 +329,7 @@ namespace CreateWordFromWinForm
 
         private void dpEffectiveDate_ValueChanged(object sender, EventArgs e)
         {
-            dpExiryDate.Value = dpEffectiveDate.Value.AddYears(1);
+            dpExiryDate.Value = dpEffectiveDate.Value.AddYears(1).AddDays(-1);
         }
 
         private void GetNextInvoiceNo()

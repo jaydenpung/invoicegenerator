@@ -7,7 +7,7 @@
 
 [Setup]
 AppName=JesServicesInvoice
-AppVersion=1.3
+AppVersion=1.4
 DefaultDirName={pf}\JesServicesInvoice
 DefaultGroupName=JesServicesInvoice
 UninstallDisplayIcon={app}\JesServicesInvoice.exe
@@ -19,8 +19,9 @@ PrivilegesRequired=admin
 DisableDirPage=no
 
 [Files]
-Source: "CreateWordFromWinForm.exe"; DestDir: "{app}"; DestName: {#MyAppExeName}
-Source: "*"; Excludes: "Settings.ini, app.publish, *.iss, JesServicesSetup.exe, CreateWordFromWinForm.exe, CreateWordFromWinForm.Application, CreateWordFromWinForm.exe.config,CreateWordFromWinForm.exe.manifest,CreateWordFromWinForm.pdb, CreateWordFromWinForm.vshost.application,CreateWordFromWinForm.vshost.exe, CreateWordFromWinForm.vshost.exe.config, CreateWordFromWinForm.vshost.config,CreateWordFromWinForm.vshost.exe.manifest"; DestDir: "{app}"
+Source: "CreateWordFromWinForm.exe"; DestDir: "{app}"; DestName: {#MyAppExeName}; Flags: ignoreversion
+Source: "*"; Excludes: "Template.docx, Settings.ini, app.publish, *.iss, JesServicesSetup.exe, CreateWordFromWinForm.exe, CreateWordFromWinForm.Application, CreateWordFromWinForm.exe.config,CreateWordFromWinForm.exe.manifest,CreateWordFromWinForm.pdb, CreateWordFromWinForm.vshost.application,CreateWordFromWinForm.vshost.exe, CreateWordFromWinForm.vshost.exe.config, CreateWordFromWinForm.vshost.config,CreateWordFromWinForm.vshost.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Template.docx"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]
 Name: "{group}\JesServicesInvoice"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\icon.ico"
@@ -41,4 +42,3 @@ Filename: {app}\{#MyAppExeName}; Description: Launch Now; Flags: postinstall ski
 
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\app.publish"
-Type: files; Name: "{app}\*"

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Spire.Doc;
+using Spire.Doc.Documents;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -16,6 +18,10 @@ namespace CreateWordFromWinForm
         public MainForm()
         {
             InitializeComponent();
+
+            cbFilterMonth.SelectedIndex = 0;
+            cbFilterYear.SelectedIndex = 0;
+
             CreateDefaultFolders();
             ReadSettingFile();
 
@@ -25,23 +31,87 @@ namespace CreateWordFromWinForm
             LoadFileList();
         }
 
-        public void LoadFileList()
+        public void LoadFileList(List<ListFilter> listFilters = null)
         {
             lvFolderList.Items.Clear();
 
+            //Load Files
             DateTime now = DateTime.Now;
             TimeSpan localOffset = now - now.ToUniversalTime();
 
-            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar;
+            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar;
             DirectoryInfo dinfo = new DirectoryInfo(folderPath);
-            FileInfo[] Files = dinfo.GetFiles("*.pdf");
+            FileInfo[] Files = new FileInfo[] { };
+
+            try
+            {
+                Files = dinfo.GetFiles("*.docx");
+            }
+            catch(Exception ex)
+            {
+
+            }
+
+            Document doc = new Document();
+            Dictionary<string, string> fileValues;
+
+            //Get Values for each file
             foreach (FileInfo file in Files)
             {
+                doc.LoadFromFile(file.FullName);
+                fileValues = getValueFromFile(doc);
+
+                //Filter
+                if (listFilters != null)
+                {
+                    bool filter = false; //If true, remove the item from list, else continue as usual
+
+                    foreach (ListFilter listFilter in listFilters)
+                    {
+                        //Get file expiry date
+                        DateTime fileExpDate = DateTime.ParseExact(fileValues["#HiddenExpDate#"], "dd-MM-yyyy", null);
+
+                        //Filter by expiry month
+                        if (listFilter.key == "expiryMonth")
+                        {
+                            //Get file expiry date
+                            DateTime filterExpDate = Convert.ToDateTime(listFilter.value);
+
+                            if (fileExpDate.Month != filterExpDate.Month)
+                            {
+                                filter = true;
+                                continue; //Stop checking filter since item already filtered
+                            }
+                        }
+
+                        //Filter by expiry year
+                        if (listFilter.key == "expiryYear") {
+                            //Get file expiry date
+                            DateTime filterExpDate = Convert.ToDateTime(listFilter.value);
+
+                            if (fileExpDate.Year != filterExpDate.Year)
+                            {
+                                filter = true;
+                                continue; //Stop checking filter since item already filtered
+                            }
+                        }
+                    }
+
+                    if (filter)
+                    {
+                        continue; //Skip and check next file
+                    }
+                }
+
                 ListViewItem item = new ListViewItem(
                     new string[]
                     {
                         file.Name.Split('.')[0],
-                        file.Name,
+                        fileValues["#HiddenName#"],
+                        fileValues["#HiddenInsuranceClass#"],
+                        fileValues["#HiddenEffDate#"],
+                        fileValues["#HiddenExpDate#"],
+                        fileValues["#HiddenTotal#"],
                         (file.CreationTimeUtc + localOffset).ToString("dd/MM/yyyy  hh:mm tt")
                     }    
                 );
@@ -51,6 +121,67 @@ namespace CreateWordFromWinForm
             lvFolderList.ListViewItemSorter = new ListViewItemComparer(0);
             lvFolderList.Sort();
 
+        }
+
+        public Dictionary<string, string> getValueFromFile(Document doc)
+        {
+            int beginIndex;
+            int endIndex;
+            List<string> values = new List<string>();
+
+            //Get textbox values
+            foreach (Section section in doc.Sections)
+            {
+                foreach (Paragraph p in section.Paragraphs)
+                {
+                    foreach (DocumentObject obj in p.ChildObjects)
+                    {
+                        if (obj.DocumentObjectType == DocumentObjectType.TextBox)
+                        {
+                            Spire.Doc.Fields.TextBox textbox = obj as Spire.Doc.Fields.TextBox;
+                            string value = "";
+
+                            foreach (DocumentObject objt in textbox.ChildObjects)
+                            {
+
+                                if (objt.DocumentObjectType == DocumentObjectType.Paragraph)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                    {
+                                        value += "\n";
+                                    }
+
+                                    value += (objt as Paragraph).Text;
+                                }
+                            }
+
+                            values.Add(value);
+                        }
+                    }
+                }
+            }
+
+            //Extract key and value
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+
+            foreach (string value in values)
+            {
+                beginIndex = value.IndexOf('#');
+                endIndex = value.LastIndexOf('#');
+
+                //HiddenKey found
+                if (beginIndex != -1 && endIndex != -1)
+                {
+                    endIndex++;
+                    int length = value.Length - endIndex;
+                    string hiddenKey = value.Substring(beginIndex, endIndex);
+                    string fieldValue = value.Substring(endIndex, length);
+
+                    dictionary.Add(hiddenKey, fieldValue);
+                }
+            }
+
+            return dictionary;
         }
 
         class ListViewItemComparer : IComparer
@@ -154,6 +285,7 @@ namespace CreateWordFromWinForm
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
         {
             AddEditForm addEditForm = new AddEditForm(lvFolderList.FocusedItem.Text);
+            addEditForm.FormClosed += addEditForm_OnFormClosed;
             addEditForm.ShowDialog();
         }
 
@@ -230,6 +362,34 @@ namespace CreateWordFromWinForm
         {
             Directory.CreateDirectory(Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER);
             Directory.CreateDirectory(Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER);
+        }
+
+        private void cbFilterExpDate_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int year;
+            string month = cbFilterMonth.Text;
+            DateTime filterDate;
+            List<ListFilter>  filterLists = new List<ListFilter>();
+
+            //Check if month is valid
+            if (Config.MONTHS.Contains(month))
+            {
+                filterLists.Add(
+                        new ListFilter("expiryMonth", DateTime.ParseExact(month, "MMMM", null))
+                    );
+            }
+
+            //Check if year is valid
+            if (int.TryParse(cbFilterYear.Text, out year))
+            {
+                filterLists.Add(
+                        new ListFilter("expiryYear", DateTime.ParseExact(year.ToString(), "yyyy", null))
+                    );
+            }
+
+            //Refresh list with filters
+            LoadFileList(filterLists);
+                
         }
     }
 }
