@@ -11,26 +11,26 @@ using Spire.Doc;
 using Spire.Doc.Documents;
 using Spire.Doc.Fields;
 using System.Diagnostics;
+using CreateWordFromWinForm.Model;
+using Newtonsoft.Json;
 
 namespace CreateWordFromWinForm
 {
     public partial class AddEditForm : Form
     {
+        public List<Invoice> invoices;
+        Invoice invoice;
+
         //sample file path
         string samplePath = Application.StartupPath + Path.DirectorySeparatorChar + "Template.docx";
 
-        bool isEditMode = false;
-
-        //word document object
-        Document document = null;
-
-        public AddEditForm(string invoiceNo = "")
+        //List of Invoice passed by reference
+        public AddEditForm(List<Invoice> argInvoices, string invoiceNo = "")
         {
             InitializeComponent();
 
             this.ActiveControl = txtName;
-
-            GetNextInvoiceNo();
+            invoices = argInvoices;
 
             dgvItems.CellEndEdit += dgvItems_OnCellEndEdit;
             dgvItems.UserDeletedRow += dgvItems_RowCountChanged;
@@ -45,23 +45,22 @@ namespace CreateWordFromWinForm
 
             dpExiryDate.Value = DateTime.Today.AddYears(1).AddDays(-1);
 
-            if(!string.IsNullOrEmpty(invoiceNo))
+            if (!string.IsNullOrEmpty(invoiceNo))
             {
-                isEditMode = true;
                 btnViewPDF.Text = "Update PDF";
-                FillForm(invoiceNo);
+                invoice = invoices.Where(it => it.invoiceNo == invoiceNo).ToArray()[0];
+                FillForm(invoice);
             }
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
+            else
+            {
+                SetNextInvoiceNo();
+            }
         }
 
         private string CreateFile(FileFormat fileFormat)
         {
             //initialize word object
-            document = new Document();
+            Document document = new Document();
             try
             {
                 document.LoadFromFile(samplePath, FileFormat.Docx);
@@ -70,46 +69,49 @@ namespace CreateWordFromWinForm
             {
                 MessageBox.Show("Error: " + ex.Message);
             }
-            //get strings to replace
-            Dictionary<string, string> dictReplace = GetReplaceDictionary();
-            //Replace text
-            foreach (KeyValuePair<string, string> kvp in dictReplace)
+
+            //Create Invoice
+            document.Replace("#Date#", invoice.date.ToString(Config.FORMAT_DATETIME), true, true);
+            document.Replace("#InvoiceNo#", invoice.invoiceNo, true, true);
+            document.Replace("#CoverNoteNo#", invoice.coverNoteNo, true, true);
+            document.Replace("#PolicyNo#", invoice.policyNo, true, true);
+            document.Replace("#EndorsementNo#", invoice.endorsementNo, true, true);
+            document.Replace("#SumInsured#", invoice.sumInsured, true, true);
+            document.Replace("#EffDate#", invoice.effectiveDate.ToString(Config.FORMAT_DATETIME), true, true);
+            document.Replace("#ExpDate#", invoice.expiryDate.ToString(Config.FORMAT_DATETIME), true, true);
+            document.Replace("#InsuranceClass#", invoice.insuranceClass, true, true);
+            document.Replace("#BankAccountNo#", invoice.bankAccountNo, true, true);
+            document.Replace("#BankName#", invoice.bankName, true, true);
+            document.Replace("#Agent#", invoice.agent, true, true);
+            document.Replace("#Total#", invoice.totalAmount, true, true);
+            document.Replace("#RinggitMalaysia#", invoice.totalAmountString, true, true);
+            document.Replace("#Name#", invoice.clientName, true, true);
+
+            //Special handling for address
+            TextSelection selection = document.FindString("#Address#", true, true);
+            TextRange range = selection.GetAsOneRange();
+            Paragraph paragraph = range.OwnerParagraph;
+
+            paragraph.Text = "";
+            paragraph.AppendRTF(invoice.clientAddress);
+
+            foreach (var invoiceItem in invoice.invoiceItems)
             {
-                string hiddenKey = "#Hidden" + kvp.Key.Trim('#') + "#";
-
-                if (kvp.Key == "#Address#")
-                {
-                    Section section = document.Sections[0];
-                    TextSelection selection = document.FindString(kvp.Key, true, true);
-                    TextRange range = selection.GetAsOneRange();
-                    Paragraph paragraph = range.OwnerParagraph;
-
-                    paragraph.Text = "";
-                    paragraph.AppendText(hiddenKey);
-                    paragraph.AppendRTF(kvp.Value);
-                }
-                else
-                {
-                    document.Replace(kvp.Key, hiddenKey + kvp.Value, true, true);
-                }
-
-                //Hide Hidden keys
-                TextSelection selectionHiddenKey = document.FindString(hiddenKey, true, false);
-                TextRange rangeHiddenKey = selectionHiddenKey.GetAsOneRange();
-                rangeHiddenKey.CharacterFormat.Hidden = true;
+                document.Replace("#Description" + invoiceItem.itemNo + "#", invoiceItem.description, true, true);
+                document.Replace("#Amount" + invoiceItem.itemNo + "#", invoiceItem.amount, true, true);
             }
 
             string pdfPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar
-                + dictReplace["#InvoiceNo#"] + ".pdf";
+                + invoice.invoiceNo + ".pdf";
             string docPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar
-                + dictReplace["#InvoiceNo#"] + ".docx";
+                + invoice.invoiceNo + ".docx";
 
             document.SaveToFile(docPath, FileFormat.Docx);
             document.SaveToFile(pdfPath, FileFormat.PDF);
 
             document.Close();
 
-            return pdfPath;            
+            return pdfPath;
         }
 
         private void btnExit_Click(object sender, EventArgs e)
@@ -119,6 +121,7 @@ namespace CreateWordFromWinForm
 
         private void btnViewPDF_Click(object sender, EventArgs e)
         {
+            SetInvoice();
             string pdfPath = CreateFile(FileFormat.PDF);
             ToViewFile(pdfPath);
         }
@@ -141,12 +144,12 @@ namespace CreateWordFromWinForm
 
             // Confirm that the cell is not empty.
             double value;
-            if(Double.TryParse(this.dgvItems.Rows[e.RowIndex].Cells[1].Value.ToString(), out value))
+            if (Double.TryParse(this.dgvItems.Rows[e.RowIndex].Cells[1].Value.ToString(), out value))
             {
                 this.dgvItems.Rows[e.RowIndex].Cells[1].Value = string.Format("{0:#,##0.00}", value);
             }
 
-            if(e.RowIndex == 0)
+            if (e.RowIndex == 0)
             {
                 dgvItems.Rows[1].Cells[1].Value = string.Format("{0:#,##0.00}", (value * Config.GST.value));
             }
@@ -158,7 +161,7 @@ namespace CreateWordFromWinForm
         }
 
         private void CheckRowCount()
-            {
+        {
             if (dgvItems.Rows != null && dgvItems.Rows.Count > 5)
             {
                 dgvItems.AllowUserToAddRows = false;
@@ -185,7 +188,7 @@ namespace CreateWordFromWinForm
                     }
                 };
                 process.Start();
-                process.WaitForExit();
+                //process.WaitForExit();
 
                 Cursor.Current = Cursors.Arrow;
                 this.Close();
@@ -193,37 +196,38 @@ namespace CreateWordFromWinForm
             catch { }
         }
 
-        Dictionary<string, string> GetReplaceDictionary()
+        private void SetInvoice()
         {
-            Dictionary<string, string> replaceDict = new Dictionary<string, string>();
-            replaceDict.Add("#Date#", dpInvoiceDate.Text);
-            replaceDict.Add("#InvoiceNo#", txtInvoiceNo.Text.Trim());
-            replaceDict.Add("#CoverNoteNo#", txtCoverNoteNo.Text);
-            replaceDict.Add("#PolicyNo#", txtPolicyNo.Text.Trim());
-            replaceDict.Add("#EndorsementNo#", txtEndorsementNo.Text);
-            replaceDict.Add("#SumInsured#", txtSumInsured.Text);
+            invoice = new Invoice();
 
-            replaceDict.Add("#EffDate#", dpEffectiveDate.Text);
-            replaceDict.Add("#ExpDate#", dpExiryDate.Text);            
-            replaceDict.Add("#InsuranceClass#", txtInsuranceClass.Text);
-            replaceDict.Add("#Name#", txtName.Text);
+            //Create object
+            invoice.invoiceNo = txtInvoiceNo.Text.Trim();
+            invoice.date = DateTime.ParseExact(dpInvoiceDate.Text, Config.FORMAT_DATETIME, null);
+            invoice.coverNoteNo = txtCoverNoteNo.Text;
+            invoice.policyNo = txtPolicyNo.Text.Trim();
+            invoice.endorsementNo = txtEndorsementNo.Text;
+            invoice.sumInsured = txtSumInsured.Text;
+            invoice.effectiveDate = DateTime.ParseExact(dpEffectiveDate.Text, Config.FORMAT_DATETIME, null);
+            invoice.expiryDate = DateTime.ParseExact(dpExiryDate.Text, Config.FORMAT_DATETIME, null);
+            invoice.insuranceClass = txtInsuranceClass.Text;
+            invoice.clientName = txtName.Text;
 
             //Rich Text Format special handling
-            var oriFont = txtAddress.Font;
-            txtAddress.Font = new Font("Courier New", 10, FontStyle.Regular);
-            replaceDict.Add("#Address#", txtAddress.Rtf);
-            txtAddress.Font = oriFont;
+            RichTextBox tempAddress = new RichTextBox();
+            tempAddress.Rtf = txtAddress.Rtf;
+            tempAddress.Font = new Font("Courier New", 10, FontStyle.Regular);
+            invoice.clientAddress = tempAddress.Rtf;
 
-            replaceDict.Add("#BankAccountNo#", Config.BANK_ACCOUNT_NO);
-            replaceDict.Add("#BankName#", Config.BANK_NAME);
+            invoice.bankName = Config.BANK_NAME;
+            invoice.bankAccountNo = Config.BANK_ACCOUNT_NO;
 
             if (this.radioAgentA.Checked)
             {
-                replaceDict.Add("#Agent#", "Kurnia");
+                invoice.agent = "Kurnia";
             }
             else if (this.radioAgentB.Checked)
             {
-                replaceDict.Add("#Agent#", "Pacific");
+                invoice.agent = "Pacific";
             }
 
             //Items Calculation and Setting Value
@@ -231,6 +235,8 @@ namespace CreateWordFromWinForm
 
             for (int i = 0; i < Config.MAX_ROW; i++)
             {
+                InvoiceItem invoiceItem = new InvoiceItem();
+
                 if (i < dgvItems.Rows.Count && dgvItems.Rows[i].Cells[0].Value != null && dgvItems.Rows[i].Cells[1].Value != null)
                 {
                     string description = dgvItems.Rows[i].Cells[0].Value.ToString();
@@ -240,21 +246,39 @@ namespace CreateWordFromWinForm
                     {
                         total += Double.Parse(amount);
 
-                        replaceDict.Add("#Description" + (i + 1) + "#", description);
-                        replaceDict.Add("#Amount" + (i + 1) + "#", "RM " + amount);
+                        invoiceItem.itemNo = (i + 1).ToString();
+                        invoiceItem.description = description;
+                        invoiceItem.amount = "RM " + amount;
                     }
                 }
                 else
                 {
-                    replaceDict.Add("#Description" + (i + 1) + "#", "");
-                    replaceDict.Add("#Amount" + (i + 1) + "#", "");
+                    invoiceItem.itemNo = (i + 1).ToString();
+                    invoiceItem.description = "";
+                    invoiceItem.amount = "";
                 }
+
+                invoice.invoiceItems.Add(invoiceItem);
             }
 
-            replaceDict.Add("#Total#", string.Format("RM {0:#,##0.00}", total));
-            replaceDict.Add("#RinggitMalaysia#", NumberToWords(total));            
+            invoice.totalAmount = string.Format("RM {0:#,##0.00}", total);
+            invoice.totalAmountString = NumberToWords(total);
 
-            return replaceDict;
+            invoice.dateCreated = DateTime.Now;
+            
+            invoices.Remove(invoices.Find(it => it.invoiceNo == invoice.invoiceNo));
+            invoices.Add(invoice);
+
+            //Save Data
+            SaveData();
+        }
+
+        public void SaveData()
+        {
+            StreamWriter steamWriter = new StreamWriter(Application.StartupPath + Path.DirectorySeparatorChar + "data.dat", false);
+
+            steamWriter.WriteLine(JsonConvert.SerializeObject(invoices));
+            steamWriter.Close();
         }
 
         public static string NumberToWords(double doubleNumber)
@@ -332,96 +356,34 @@ namespace CreateWordFromWinForm
             dpExiryDate.Value = dpEffectiveDate.Value.AddYears(1).AddDays(-1);
         }
 
-        private void GetNextInvoiceNo()
+        private void SetNextInvoiceNo()
         {
-            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar;
-            DirectoryInfo dinfo = new DirectoryInfo(folderPath);
-            FileInfo[] Files = dinfo.GetFiles("*.pdf");
-
-            int invoiceNo = 0;
-
-            if (Files.Any())
-            {
-                invoiceNo = Files.Select(file => int.Parse(file.Name.Split('.')[0])).ToList().Max();
-            }
-
-            txtInvoiceNo.Text = (invoiceNo + 1).ToString();
+            txtInvoiceNo.Text = (invoices.Max(it => int.Parse(it.invoiceNo)) + 1).ToString();
         }
 
-        private void FillForm(string invoiceNo)
+        private void FillForm(Invoice argInvoice)
         {
-            //Get document
-            string filePath = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar
-                + invoiceNo + ".docx";
-            document = new Document();
-            document.LoadFromFile(filePath, FileFormat.Docx);
-            
-            //Get textbox values
-            List<string> values = new List<string>();
-            foreach (Section section in document.Sections)
-            {
-                foreach(Paragraph p in section.Paragraphs)
-                {
-                    foreach (DocumentObject obj in p.ChildObjects)
-                    {
-                        if (obj.DocumentObjectType == DocumentObjectType.TextBox)
-                        {
-                            Spire.Doc.Fields.TextBox textbox = obj as Spire.Doc.Fields.TextBox;
-                            string value = "";
-
-                            foreach (DocumentObject objt in textbox.ChildObjects)
-                            {
-
-                                if (objt.DocumentObjectType == DocumentObjectType.Paragraph)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(value))
-                                    {
-                                        value += "\n";
-                                    }
-
-                                    value += (objt as Paragraph).Text;
-                                }
-                            }
-
-                            values.Add(value);
-                        }
-                    }
-                }
-            }
-
-            //Extract key and value
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-
-            foreach (string value in values)
-            {
-                int beginIndex = value.IndexOf('#');
-                int endIndex = value.LastIndexOf('#');
-                
-                //HiddenKey found
-                if(beginIndex != -1 && endIndex != -1)
-                {
-                    endIndex ++;
-                    int length = value.Length - endIndex;
-                    string hiddenKey = value.Substring(beginIndex, endIndex);
-                    string fieldValue = value.Substring(endIndex, length);
-
-                    dictionary.Add(hiddenKey, fieldValue);
-                }
-            }
-
             //Set Value
-            dpInvoiceDate.Text = dictionary["#HiddenDate#"];
-            txtInvoiceNo.Text = dictionary["#HiddenInvoiceNo#"];
-            txtCoverNoteNo.Text = dictionary["#HiddenCoverNoteNo#"];
-            txtPolicyNo.Text = dictionary["#HiddenPolicyNo#"];
-            txtEndorsementNo.Text = dictionary["#HiddenEndorsementNo#"];
-            txtSumInsured.Text = dictionary["#HiddenSumInsured#"];
-            dpEffectiveDate.Text = dictionary["#HiddenEffDate#"];
-            dpExiryDate.Text = dictionary["#HiddenExpDate#"];
-            txtInsuranceClass.Text = dictionary["#HiddenInsuranceClass#"];
-            txtName.Text = dictionary["#HiddenName#"];
-            txtAddress.Text = dictionary["#HiddenAddress#"];
-            string agent = dictionary["#HiddenAgent#"];
+            dpInvoiceDate.Text = argInvoice.date.ToString(Config.FORMAT_DATETIME);
+            txtInvoiceNo.Text = argInvoice.invoiceNo;
+            txtCoverNoteNo.Text = argInvoice.coverNoteNo;
+            txtPolicyNo.Text = argInvoice.policyNo;
+            txtEndorsementNo.Text = argInvoice.endorsementNo;
+            txtSumInsured.Text = argInvoice.sumInsured;
+            dpEffectiveDate.Text = argInvoice.effectiveDate.ToString(Config.FORMAT_DATETIME);
+            dpExiryDate.Text = argInvoice.expiryDate.ToString(Config.FORMAT_DATETIME);
+            txtInsuranceClass.Text = argInvoice.insuranceClass;
+            txtName.Text = argInvoice.clientName;
+            try
+            {
+                txtAddress.Rtf = argInvoice.clientAddress;
+            }
+            catch (Exception ex)
+            {
+                txtAddress.Text = argInvoice.clientAddress;
+            }
+
+            string agent = argInvoice.agent;
 
             if (agent == "Kurnia")
             {
@@ -434,16 +396,11 @@ namespace CreateWordFromWinForm
 
             dgvItems.Rows.Clear();
 
-            for (int i = 0; i < Config.MAX_ROW; i++)
+            foreach (var item in argInvoice.invoiceItems)
             {
-                string description = dictionary["#HiddenDescription" + (i + 1) + "#"];
-                string amount = dictionary["#HiddenAmount" + (i + 1) + "#"];
-
-                if(!string.IsNullOrWhiteSpace(description) && !string.IsNullOrWhiteSpace(amount))
+                if (!string.IsNullOrWhiteSpace(item.description) && !string.IsNullOrWhiteSpace(item.amount))
                 {
-                    amount = amount.Substring(3, amount.Length - 3); //Remove "RM "
-
-                    dgvItems.Rows.Insert(i, description, amount);
+                    dgvItems.Rows.Insert(int.Parse(item.itemNo) - 1, item.description, item.amount.Substring(3, item.amount.Length - 3));
                 }
             }
         }

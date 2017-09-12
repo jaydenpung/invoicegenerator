@@ -451,7 +451,6 @@ namespace CreateWordFromWinForm
             this.MaximizeBox = false;
             this.Name = "AddEditForm";
             this.Text = "Jes Services";
-            this.Load += new System.EventHandler(this.Form1_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.panel1.ResumeLayout(false);

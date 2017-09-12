@@ -20,7 +20,14 @@ DisableDirPage=no
 
 [Files]
 Source: "CreateWordFromWinForm.exe"; DestDir: "{app}"; DestName: {#MyAppExeName}; Flags: ignoreversion
-Source: "*"; Excludes: "Template.docx, Settings.ini, app.publish, *.iss, JesServicesSetup.exe, CreateWordFromWinForm.exe, CreateWordFromWinForm.Application, CreateWordFromWinForm.exe.config,CreateWordFromWinForm.exe.manifest,CreateWordFromWinForm.pdb, CreateWordFromWinForm.vshost.application,CreateWordFromWinForm.vshost.exe, CreateWordFromWinForm.vshost.exe.config, CreateWordFromWinForm.vshost.config,CreateWordFromWinForm.vshost.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion                     
+Source: "Newtonsoft.Json.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Spire.Doc.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Spire.Doc.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Spire.License.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Spire.License.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Spire.Pdf.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Template.docx"; DestDir: "{app}"; Flags: onlyifdoesntexist
 
 [Icons]

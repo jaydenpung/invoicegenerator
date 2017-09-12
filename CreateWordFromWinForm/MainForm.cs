@@ -1,4 +1,7 @@
-﻿using Spire.Doc;
+﻿using CreateWordFromWinForm.Model;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Spire.Doc;
 using Spire.Doc.Documents;
 using System;
 using System.Collections;
@@ -15,8 +18,11 @@ namespace CreateWordFromWinForm
 {
     public partial class MainForm : Form
     {
+        List<Invoice> invoices = new List<Invoice> ();
+
         public MainForm()
         {
+
             InitializeComponent();
 
             cbFilterMonth.SelectedIndex = 0;
@@ -24,6 +30,8 @@ namespace CreateWordFromWinForm
 
             CreateDefaultFolders();
             ReadSettingFile();
+            UpdateProcedure();
+            LoadData();
 
             lvFolderList.MouseClick += lvFolderList_OnMouseClick;
             lvFolderList.MouseDoubleClick += lvFolderList_OnMouseDoubleClick;
@@ -34,33 +42,10 @@ namespace CreateWordFromWinForm
         public void LoadFileList(List<ListFilter> listFilters = null)
         {
             lvFolderList.Items.Clear();
-
-            //Load Files
-            DateTime now = DateTime.Now;
-            TimeSpan localOffset = now - now.ToUniversalTime();
-
-            string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar;
-            DirectoryInfo dinfo = new DirectoryInfo(folderPath);
-            FileInfo[] Files = new FileInfo[] { };
-
-            try
-            {
-                Files = dinfo.GetFiles("*.docx");
-            }
-            catch(Exception ex)
-            {
-
-            }
-
-            Document doc = new Document();
-            Dictionary<string, string> fileValues;
-
+            
             //Get Values for each file
-            foreach (FileInfo file in Files)
+            foreach (Invoice invoice in invoices)
             {
-                doc.LoadFromFile(file.FullName);
-                fileValues = getValueFromFile(doc);
-
                 //Filter
                 if (listFilters != null)
                 {
@@ -68,16 +53,12 @@ namespace CreateWordFromWinForm
 
                     foreach (ListFilter listFilter in listFilters)
                     {
-                        //Get file expiry date
-                        DateTime fileExpDate = DateTime.ParseExact(fileValues["#HiddenExpDate#"], "dd-MM-yyyy", null);
-
                         //Filter by expiry month
                         if (listFilter.key == "expiryMonth")
                         {
-                            //Get file expiry date
                             DateTime filterExpDate = Convert.ToDateTime(listFilter.value);
 
-                            if (fileExpDate.Month != filterExpDate.Month)
+                            if (invoice.expiryDate.Month != filterExpDate.Month)
                             {
                                 filter = true;
                                 continue; //Stop checking filter since item already filtered
@@ -86,10 +67,10 @@ namespace CreateWordFromWinForm
 
                         //Filter by expiry year
                         if (listFilter.key == "expiryYear") {
-                            //Get file expiry date
+
                             DateTime filterExpDate = Convert.ToDateTime(listFilter.value);
 
-                            if (fileExpDate.Year != filterExpDate.Year)
+                            if (invoice.expiryDate.Year != filterExpDate.Year)
                             {
                                 filter = true;
                                 continue; //Stop checking filter since item already filtered
@@ -106,13 +87,13 @@ namespace CreateWordFromWinForm
                 ListViewItem item = new ListViewItem(
                     new string[]
                     {
-                        file.Name.Split('.')[0],
-                        fileValues["#HiddenName#"],
-                        fileValues["#HiddenInsuranceClass#"],
-                        fileValues["#HiddenEffDate#"],
-                        fileValues["#HiddenExpDate#"],
-                        fileValues["#HiddenTotal#"],
-                        (file.CreationTimeUtc + localOffset).ToString("dd/MM/yyyy  hh:mm tt")
+                        invoice.invoiceNo,
+                        invoice.clientName,
+                        invoice.insuranceClass,
+                        invoice.effectiveDate.ToString(Config.FORMAT_DATETIME),
+                        invoice.expiryDate.ToString(Config.FORMAT_DATETIME),
+                        invoice.totalAmount,
+                        (invoice.dateCreated).ToString("dd/MM/yyyy  hh:mm tt")
                     }    
                 );
 
@@ -121,67 +102,6 @@ namespace CreateWordFromWinForm
             lvFolderList.ListViewItemSorter = new ListViewItemComparer(0);
             lvFolderList.Sort();
 
-        }
-
-        public Dictionary<string, string> getValueFromFile(Document doc)
-        {
-            int beginIndex;
-            int endIndex;
-            List<string> values = new List<string>();
-
-            //Get textbox values
-            foreach (Section section in doc.Sections)
-            {
-                foreach (Paragraph p in section.Paragraphs)
-                {
-                    foreach (DocumentObject obj in p.ChildObjects)
-                    {
-                        if (obj.DocumentObjectType == DocumentObjectType.TextBox)
-                        {
-                            Spire.Doc.Fields.TextBox textbox = obj as Spire.Doc.Fields.TextBox;
-                            string value = "";
-
-                            foreach (DocumentObject objt in textbox.ChildObjects)
-                            {
-
-                                if (objt.DocumentObjectType == DocumentObjectType.Paragraph)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(value))
-                                    {
-                                        value += "\n";
-                                    }
-
-                                    value += (objt as Paragraph).Text;
-                                }
-                            }
-
-                            values.Add(value);
-                        }
-                    }
-                }
-            }
-
-            //Extract key and value
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-
-            foreach (string value in values)
-            {
-                beginIndex = value.IndexOf('#');
-                endIndex = value.LastIndexOf('#');
-
-                //HiddenKey found
-                if (beginIndex != -1 && endIndex != -1)
-                {
-                    endIndex++;
-                    int length = value.Length - endIndex;
-                    string hiddenKey = value.Substring(beginIndex, endIndex);
-                    string fieldValue = value.Substring(endIndex, length);
-
-                    dictionary.Add(hiddenKey, fieldValue);
-                }
-            }
-
-            return dictionary;
         }
 
         class ListViewItemComparer : IComparer
@@ -204,10 +124,9 @@ namespace CreateWordFromWinForm
             }
         }
 
-
         private void btnAddNew_Click(object sender, EventArgs e)
         {
-            AddEditForm addEditForm = new AddEditForm();
+            AddEditForm addEditForm = new AddEditForm(invoices);
             addEditForm.FormClosed += addEditForm_OnFormClosed;
             addEditForm.ShowDialog();
         }
@@ -284,7 +203,7 @@ namespace CreateWordFromWinForm
 
         private void editToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            AddEditForm addEditForm = new AddEditForm(lvFolderList.FocusedItem.Text);
+            AddEditForm addEditForm = new AddEditForm(invoices, lvFolderList.FocusedItem.Text);
             addEditForm.FormClosed += addEditForm_OnFormClosed;
             addEditForm.ShowDialog();
         }
@@ -390,6 +309,156 @@ namespace CreateWordFromWinForm
             //Refresh list with filters
             LoadFileList(filterLists);
                 
+        }
+        
+        //Deprecated, keep for updateProcedure()
+        public Dictionary<string, string> getValueFromFile(Document doc)
+        {
+            int beginIndex;
+            int endIndex;
+            List<string> values = new List<string>();
+
+            //Get textbox values
+            foreach (Section section in doc.Sections)
+            {
+                foreach (Paragraph p in section.Paragraphs)
+                {
+                    foreach (DocumentObject obj in p.ChildObjects)
+                    {
+                        if (obj.DocumentObjectType == DocumentObjectType.TextBox)
+                        {
+                            Spire.Doc.Fields.TextBox textbox = obj as Spire.Doc.Fields.TextBox;
+                            string value = "";
+
+                            foreach (DocumentObject objt in textbox.ChildObjects)
+                            {
+
+                                if (objt.DocumentObjectType == DocumentObjectType.Paragraph)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(value))
+                                    {
+                                        value += "\n";
+                                    }
+
+                                    value += (objt as Paragraph).Text;
+                                }
+                            }
+
+                            values.Add(value);
+                        }
+                    }
+                }
+            }
+
+            //Extract key and value
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+
+            foreach (string value in values)
+            {
+                beginIndex = value.IndexOf('#');
+                endIndex = value.LastIndexOf('#');
+
+                //HiddenKey found
+                if (beginIndex != -1 && endIndex != -1)
+                {
+                    endIndex++;
+                    int length = value.Length - endIndex;
+                    string hiddenKey = value.Substring(beginIndex, endIndex - beginIndex);
+                    string fieldValue = value.Substring(endIndex, length);
+
+                    dictionary.Add(hiddenKey, fieldValue);
+                }
+            }
+
+            return dictionary;
+        }
+
+        private void UpdateProcedure() {
+
+            //V2 Procedure
+            string dataFile = Application.StartupPath + Path.DirectorySeparatorChar + "data.dat";
+            if (!File.Exists(dataFile)) {
+
+                List<Invoice> invoicesToTransform = new List<Invoice>();
+
+                //Load Files
+                DateTime now = DateTime.Now;
+                TimeSpan localOffset = now - now.ToUniversalTime();
+
+                string folderPath = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar;
+                DirectoryInfo dinfo = new DirectoryInfo(folderPath);
+                FileInfo[] Files = new FileInfo[] { };
+
+                try
+                {
+                    Files = dinfo.GetFiles("*.docx");
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                Document doc = new Document();
+                Dictionary<string, string> dictionary;
+
+                //Get Values for each file
+                foreach (FileInfo file in Files)
+                {
+                    doc.LoadFromFile(file.FullName);
+                    dictionary = getValueFromFile(doc);
+
+                    Invoice invoice = new Invoice();
+                    invoice.date = DateTime.ParseExact(dictionary["#HiddenDate#"], Config.FORMAT_DATETIME, null);
+                    invoice.invoiceNo = dictionary["#HiddenInvoiceNo#"];
+                    invoice.coverNoteNo = dictionary["#HiddenCoverNoteNo#"];
+                    invoice.policyNo = dictionary["#HiddenPolicyNo#"];
+                    invoice.endorsementNo = dictionary["#HiddenEndorsementNo#"];
+                    invoice.sumInsured = dictionary["#HiddenSumInsured#"];
+                    invoice.effectiveDate = DateTime.ParseExact(dictionary["#HiddenEffDate#"], Config.FORMAT_DATETIME, null); ;
+                    invoice.expiryDate = DateTime.ParseExact(dictionary["#HiddenExpDate#"], Config.FORMAT_DATETIME, null);
+                    invoice.insuranceClass = dictionary["#HiddenInsuranceClass#"];
+                    invoice.clientName = dictionary["#HiddenName#"];
+                    invoice.clientAddress = dictionary["#HiddenAddress#"];
+                    invoice.agent = dictionary["#HiddenAgent#"];
+                    invoice.totalAmount = dictionary["#HiddenTotal#"];
+                    invoice.dateCreated = file.CreationTimeUtc + localOffset;
+                    invoice.bankAccountNo = dictionary["#HiddenBankAccountNo#"];
+                    invoice.bankName = dictionary["#HiddenBankName#"];
+                    invoice.totalAmountString = dictionary["#HiddenRinggitMalaysia#"];
+
+                    for (int i = 0; i < Config.MAX_ROW; i++)
+                    {
+                        invoice.invoiceItems.Add(
+                                new InvoiceItem((i + 1).ToString(), dictionary["#HiddenDescription" + (i + 1) + "#"], dictionary["#HiddenAmount" + (i + 1) + "#"])
+                            );
+                    }
+
+                    invoicesToTransform.Add(invoice);
+                }
+
+                //transform data
+                StreamWriter streamWriter = new StreamWriter(Application.StartupPath + Path.DirectorySeparatorChar + "data.dat");
+                
+                streamWriter.WriteLine(JsonConvert.SerializeObject(invoicesToTransform));
+                streamWriter.Close();
+            }
+        }
+
+        private void LoadData()
+        {
+            string line;
+
+            // Read the file and display it line by line.
+            string dataFile = Application.StartupPath + Path.DirectorySeparatorChar + "data.dat";
+
+            StreamReader streamReader = new StreamReader(dataFile);
+
+            while ((line = streamReader.ReadLine()) != null)
+            {
+                invoices = ( (JArray) JsonConvert.DeserializeObject(line) ).ToObject< List<Invoice> >();
+            }
+
+            streamReader.Close();
         }
     }
 }
