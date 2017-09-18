@@ -7,7 +7,7 @@
 
 [Setup]
 AppName=JesServicesInvoice
-AppVersion=1.4
+AppVersion=2.1
 DefaultDirName={pf}\JesServicesInvoice
 DefaultGroupName=JesServicesInvoice
 UninstallDisplayIcon={app}\JesServicesInvoice.exe

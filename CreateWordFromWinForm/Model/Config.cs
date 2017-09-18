@@ -11,10 +11,12 @@ namespace CreateWordFromWinForm
         public static string BANK_NAME;
         public static string BANK_ACCOUNT_NO;
         public static string FORMAT_DATETIME = "dd-MM-yyyy";
+        public static string FORMAT_LOGGER_DATETIME = "yyyy-MM-dd HH:mm:ss.fff";
 
         public static int MAX_ROW = 5;
         public static string INVOICE_FOLDER = "InvoiceFolder";
         public static string DOC_FOLDER = "DocFolder";
+        public static string ERROR_LOG_FILE = "error.log";
 
         public static bool UPDATED; //Temporary setting for V2
 
