@@ -181,14 +181,19 @@ namespace CreateWordFromWinForm
 
             if (dialogResult == DialogResult.Yes)
             {
+                string invoiceNo = lvFolderList.FocusedItem.Text;
+                Invoice invoice = invoices.Find(it => it.invoiceNo == invoiceNo );
+
                 string pdfFile = Application.StartupPath + Path.DirectorySeparatorChar + Config.INVOICE_FOLDER + Path.DirectorySeparatorChar
-                + lvFolderList.FocusedItem.Text + ".pdf";
+                + invoiceNo + ".pdf";
 
                 string docFile = Application.StartupPath + Path.DirectorySeparatorChar + Config.DOC_FOLDER + Path.DirectorySeparatorChar
-                + lvFolderList.FocusedItem.Text + ".docx";  
+                + invoiceNo + ".docx";
+
 
                 try
                 {
+                    invoices.Remove(invoice);
                     File.Delete(pdfFile);
                     File.Delete(docFile);
                 }
@@ -287,7 +292,7 @@ namespace CreateWordFromWinForm
         {
             int year;
             string month = cbFilterMonth.Text;
-            DateTime filterDate;
+
             List<ListFilter>  filterLists = new List<ListFilter>();
 
             //Check if month is valid
