@@ -11,7 +11,9 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace CreateWordFromWinForm
@@ -336,6 +338,10 @@ namespace CreateWordFromWinForm
                     {
                         Config.BANK_ACCOUNT_NO = value;
                     }
+                    else if (key == "UPDATE_URL")
+                    {
+                        Config.UPDATE_URL = value;
+                    }
                 }
 
                 file.Close();
@@ -577,6 +583,20 @@ namespace CreateWordFromWinForm
                 }
 
                 streamReader.Close();
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Class: " + this.GetType().FullName + "; Method: " + System.Reflection.MethodBase.GetCurrentMethod().Name + "; Message: " + ex.Message);
+            }
+        }
+
+        private void updateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ProgressForm progressForm = new ProgressForm();
+                //progressForm.FormClosed += progressForm_OnFormClosed;
+                progressForm.ShowDialog();
             }
             catch (Exception ex)
             {
