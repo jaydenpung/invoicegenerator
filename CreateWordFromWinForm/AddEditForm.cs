@@ -455,15 +455,14 @@ namespace CreateWordFromWinForm
         {
             try
             {
-                //Set Value
-                dpInvoiceDate.Text = argInvoice.date.ToString(Config.FORMAT_DATETIME);
+                dpInvoiceDate.Value = argInvoice.date;
                 txtInvoiceNo.Text = argInvoice.invoiceNo;
                 txtCoverNoteNo.Text = argInvoice.coverNoteNo;
                 txtPolicyNo.Text = argInvoice.policyNo;
                 txtEndorsementNo.Text = argInvoice.endorsementNo;
                 txtSumInsured.Text = argInvoice.sumInsured;
-                dpEffectiveDate.Text = argInvoice.effectiveDate.ToString(Config.FORMAT_DATETIME);
-                dpExiryDate.Text = argInvoice.expiryDate.ToString(Config.FORMAT_DATETIME);
+                dpEffectiveDate.Value = argInvoice.effectiveDate;
+                dpExiryDate.Value = argInvoice.expiryDate;
                 txtInsuranceClass.Text = argInvoice.insuranceClass;
                 txtName.Text = argInvoice.clientName;
                 try

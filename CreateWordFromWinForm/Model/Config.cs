@@ -18,7 +18,7 @@ namespace CreateWordFromWinForm
         public static string DOC_FOLDER = "DocFolder";
         public static string ERROR_LOG_FILE = "error.log";
 
-        public static string UPDATE_URL = "https://www.pungkahheng.com/downloads/JesServicesSetup.exe";
+        public static string UPDATE_URL = "https://jaypung.com/downloads/JesServicesSetup.exe";
         public static string INSTALLER_NAME = "JesServicesSetup.exe";
 
         public static bool UPDATED; //Temporary setting for V2

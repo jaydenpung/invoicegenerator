@@ -7,7 +7,9 @@
 
 [Setup]
 AppName=JesServicesInvoice
-AppVersion=2.2
+AppVersion=2.3
+AppPublisher=Jay Pung
+AppPublisherURL=https://www.JayPung.com
 DefaultDirName={pf}\JesServicesInvoice
 DefaultGroupName=JesServicesInvoice
 UninstallDisplayIcon={app}\JesServicesInvoice.exe
