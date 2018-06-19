@@ -238,6 +238,7 @@ namespace CreateWordFromWinForm
                     invoices.Remove(invoice);
                     File.Delete(pdfFile);
                     File.Delete(docFile);
+                    SaveData();
 
                     LoadFileList();
                 }
@@ -597,6 +598,21 @@ namespace CreateWordFromWinForm
                 ProgressForm progressForm = new ProgressForm();
                 //progressForm.FormClosed += progressForm_OnFormClosed;
                 progressForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Class: " + this.GetType().FullName + "; Method: " + System.Reflection.MethodBase.GetCurrentMethod().Name + "; Message: " + ex.Message);
+            }
+        }
+
+        public void SaveData()
+        {
+            try
+            {
+                StreamWriter steamWriter = new StreamWriter(Application.StartupPath + Path.DirectorySeparatorChar + "data.dat", false);
+
+                steamWriter.WriteLine(JsonConvert.SerializeObject(invoices));
+                steamWriter.Close();
             }
             catch (Exception ex)
             {
